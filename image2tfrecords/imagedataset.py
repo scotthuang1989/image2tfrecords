@@ -9,6 +9,7 @@ import os
 import pandas as pd
 import tensorflow as tf
 from tensorflow.contrib import slim
+# TODO: try tf.data API. because slim is not an official API.
 
 from .settings import (DEFAULT_READ_FILE_PATTERN, LABELS_FILENAME,
                        SUMMARY_FILE_PATTERN, VALID_SPLIT_NAME)

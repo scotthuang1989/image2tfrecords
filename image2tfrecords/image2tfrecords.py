@@ -1,10 +1,9 @@
 """
-A lib create tfrecords file from images.
+Create tfrecords file from images.
 
 Usage:
 
 from image2tfrecords import Image2TFRecords
-
 
 img2tf = Image2TFRecords(
         image_dir,
@@ -12,7 +11,7 @@ img2tf = Image2TFRecords(
         val_size=0.2,
         test_size=0.1
         )
-img2tf.create_tfrecords(output_dir="/home/scott/tmp/exxx")
+img2tf.create_tfrecords(output_dir="/tmp/exxx")
 """
 import os
 import sys
