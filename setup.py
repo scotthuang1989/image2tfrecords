@@ -1,16 +1,11 @@
-"""A setuptools based setup module.
-
-See:
-https://packaging.python.org/en/latest/distributing.html
-https://github.com/pypa/sampleproject
-"""
+"""Setup file for image2tfrecords."""
 
 # Always prefer setuptools over distutils
 from setuptools import setup, find_packages
 # To use a consistent encoding
 from codecs import open
 from os import path
-import image2tfrecords
+
 
 here = path.abspath(path.dirname(__file__))
 
