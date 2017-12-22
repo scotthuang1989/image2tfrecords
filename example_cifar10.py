@@ -8,14 +8,13 @@ Usage:
 * extract data with command: `7z x train.7z`
 * Directory:/tmp/cifar10_data should look like this:
   ```
-  ├── train
-  ├── train.7z
-  └── trainLabels.csv
+  train
+  train.7z
+  trainLabels.csv
   ```
-  "train"  contains all cifar10 images# Convert label file to required format
-# There is 1 steps
-# 1. add .png extension to filename.
+  train contains all cifar10 images Convert label file to required format
 """
+import math
 import pandas as pd
 import tensorflow as tf
 from tensorflow.contrib import slim
@@ -28,6 +27,7 @@ CIFAR10_LABELS = "/tmp/cifar10_data/trainLabels.csv"
 
 
 def create_records():
+    """Create tfrecords."""
     # Convert label file to required format
     # There is 1 steps
     # 1. add .png extension to filename.
@@ -50,6 +50,7 @@ def create_records():
 
 
 def small_net(inputs, num_class, istraining):
+  """Build a small net works for test."""
   with slim.arg_scope([slim.conv2d, slim.fully_connected],
                       activation_fn=tf.nn.relu,
                       weights_initializer=tf.truncated_normal_initializer(0.0, 0.01),
@@ -74,7 +75,8 @@ def small_net(inputs, num_class, istraining):
   return net
 
 
-def batch_and_process(data_set, num_class):
+def batch_and_process(data_set, num_class, num_epochs=1):
+    """Preprocess and bach image."""
     data_provider = slim.dataset_data_provider.DatasetDataProvider(
                     data_set,
                     common_queue_capacity=64,
@@ -87,33 +89,36 @@ def batch_and_process(data_set, num_class):
     image_raw = tf.image.per_image_standardization(image_raw)
 
     # batch image to speed up.
-    images, labels = tf.train.batch(
+    images, labels = tf.train.shuffle_batch(
                             [image_raw, label],
                             batch_size=16,
-                            num_threads=2,
-                            capacity=5 * 16)
+                            capacity=128,
+                            min_after_dequeue=64,
+                            num_threads=2)
 
-    labels = slim.one_hot_encoding(labels, num_class)
-    return images, labels
+    label_onehot = slim.one_hot_encoding(labels, num_class)
+    return images, label_onehot, labels
+
 
 def main():
+    """Main function for train and validate."""
+    tf.logging.set_verbosity(tf.logging.INFO)
     # get training data from tfrecords file.
     # Create a ImageDataSet
-    with tf.Graph().as_default() as graph:
-        tf.logging.set_verbosity(tf.logging.INFO)
+    with tf.Graph().as_default():
         image_dataset = ImageDataSet("/tmp/cifar10_data/tfrecords", 'cifar10')
         num_class = len(image_dataset.labels_df)
         # Get training split
         train_split = image_dataset.get_split("train")
 
-        images, labels = batch_and_process(train_split, num_class)
+        images, labels, _ = batch_and_process(train_split, num_class, num_epochs=None)
         # define a very simple network with slim
         predictions = small_net(images, num_class, istraining=True)
         # get loss
         slim.losses.softmax_cross_entropy(predictions, labels)
         total_loss = slim.losses.get_total_loss()
         # optimizer
-        optimizer = tf.train.GradientDescentOptimizer(0.01)
+        optimizer = tf.train.AdamOptimizer()
         # create training ops and train
         train_op = slim.learning.create_train_op(total_loss, optimizer)
         logdir = "/tmp/cifar10_data/train_dir"   # Where checkpoints are stored.
@@ -121,20 +126,22 @@ def main():
         slim.learning.train(
             train_op,
             logdir,
-            number_of_steps=1000,
+            number_of_steps=200000,
             save_summaries_secs=300,
             save_interval_secs=10,
             log_every_n_steps=10)
 
     # Evaluate the model
     # Load the data
-    with tf.Graph().as_default() as graph:
+    logdir = "/tmp/cifar10_data/train_dir"
+    with tf.Graph().as_default():
+        image_dataset = ImageDataSet("/tmp/cifar10_data/tfrecords", 'cifar10')
+        num_class = len(image_dataset.labels_df)
         val_split = image_dataset.get_split("validation")
-        val_images, val_labels = batch_and_process(val_split, num_class)
+        val_images, _, val_labels = batch_and_process(val_split, num_class)
         # Define the network
         val_predictions = small_net(val_images, num_class, istraining=False)
         val_predictions = tf.argmax(val_predictions, 1)
-        val_labels = tf.argmax(val_labels, 1)
 
         # Choose the metrics to compute:
         names_to_values, names_to_updates = slim.metrics.aggregate_metric_map({
@@ -142,18 +149,14 @@ def main():
         })
         saver = tf.train.Saver()
         # Evaluate the model using 1000 batches of data:
-        num_batches = 100
         latest_chk = tf.train.latest_checkpoint(logdir)
         with tf.Session() as sess:
             saver.restore(sess, latest_chk)
             sess.run(tf.global_variables_initializer())
             sess.run(tf.local_variables_initializer())
             tf.train.start_queue_runners()
-            # pre, lab = sess.run([val_predictions, val_labels])
-            # # import pdb; pdb.set_trace()
-            # print("haha")
 
-            for batch_id in range(num_batches):
+            for batch_id in range(math.floor(image_dataset.dataset_summary["val_number"]/16)):
                 sess.run(names_to_updates)
 
             metric_values = sess.run(names_to_values)
