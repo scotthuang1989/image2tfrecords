@@ -1,7 +1,7 @@
 # image2tfrecords
 --------
 
-Convert images into tfrecord to comply with tensorflow best practice [tensorflow link](https://tensorflow.google.cn/performance/performance_guide#input_pipeline_optimization).
+Convert images into tfrecord to comply with tensorflow best practice: [tensorflow doc link](https://tensorflow.google.cn/performance/performance_guide#input_pipeline_optimization).
 
 # Supported platform
 
@@ -18,7 +18,7 @@ Convert images into tfrecord to comply with tensorflow best practice [tensorflow
 
 # Installation
 
-`pip install`
+`pip install image2tfrecords`
 
 # Features
 
@@ -29,7 +29,7 @@ Convert images into tfrecord to comply with tensorflow best practice [tensorflow
 
 # Tutorial
 
-This simple tutorial will work you through creating cifar10 tfrecords for kaggle competition. yo can check example_cifar10.py for full code.
+This simple tutorial will work you through creating cifar10 tfrecords for kaggle competition. yo can check `example_cifar10.py` for full code.
 
 ### Download cifar10 data.
 
@@ -44,7 +44,7 @@ This simple tutorial will work you through creating cifar10 tfrecords for kaggle
   ```
   "train" contains all cifar10 images
 
-### Convert label file(filename -class map)
+### Convert label file(a file list all images and its corresponding labels)
 
 Because this module requires label file with following format:
 
@@ -120,8 +120,30 @@ After run this, the tfrecords file will be at: `/tmp/cifar10_data/tfrecords`, it
 
 ### Train a model with these tfrecords file.
 
+check the example_cifar10.py for full code.
+
+But the key step is creating a `ImageDataSet`:
+
+```
+image_dataset = ImageDataSet("/tmp/cifar10_data/tfrecords", 'cifar10')
+num_class = len(image_dataset.labels_df)
+val_split = image_dataset.get_split("validation")
+val_images, _, val_labels = batch_and_process(val_split, num_class)
+```
+After get a tensorflow DataSet. The most common practice is pass it to `DatasetDataProvider`, then get the data from this `DatasetDataProvider`.
+
+```
+data_provider = slim.dataset_data_provider.DatasetDataProvider(
+                data_set,
+                common_queue_capacity=64,
+                common_queue_min=32,
+                num_epochs=1, shuffle=False)
+
+image_raw, label, _ = data_provider.get(['image', 'label', 'filename'])
+```
+
+
 
 # API Intruduction
 
-
-image_dataset summary include what information???
+This should be generated from comments automatically.
