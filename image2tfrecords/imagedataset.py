@@ -39,7 +39,7 @@ class ImageDataSet(object):
                     SUMMARY_FILE_PATTERN % (self.dataset_name))
       with open(summary_file) as fd:
         self.dataset_summary = json.load(fd)
-    except Exception as ex:
+    except Exception:
       raise RuntimeError("summary file don't exsits: %s" % (summary_file,))
 
     # read label file
@@ -51,7 +51,7 @@ class ImageDataSet(object):
         self.labels_to_class_names[
           self.labels_df.loc[i, self.dataset_summary["class_id_header"]]] =\
           self.labels_df.loc[i, self.dataset_summary["class_header"]]
-    except Exception as ex:
+    except Exception:
       raise RuntimeError("label file don't exsits: %s" % (label_file,))
 
   # def _has_label_file(self):
