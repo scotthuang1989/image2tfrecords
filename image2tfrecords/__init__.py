@@ -11,6 +11,10 @@ Features:
 """
 from os import path
 
+from . import imagedataset
+from . import image2tfrecords
+
+
 here = path.abspath(path.dirname(__file__))
 
 parent_path = path.dirname(here)

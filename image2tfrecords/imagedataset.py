@@ -24,7 +24,26 @@ class ImageDataSet(object):
   """
   Read Data From tfrecords.
 
-  Usage:
+  Parameters:
+  ------------------------------------------------------------------------------
+  tfrecords_dir: wheere to find tfrecords files.
+  dataset_name: name of dataset
+
+  Attributes:
+  ------------------------------------------------------------------------------
+  Dataset Information:
+    tfrecords_dir
+    labels_df: A Dataframe map class names to class id.
+    labels_to_class_names: A dict. key is class id. value is class name.
+    dataset_name: dataset name
+    dataset_summary: A dict contails following information.
+                    class_header
+                    filename_header
+                    test_number
+                    train_number
+                    class_id_header
+                    val_number
+                    total_number
   """
 
   def __init__(self, tfrecords_dir, dataset_name=''):

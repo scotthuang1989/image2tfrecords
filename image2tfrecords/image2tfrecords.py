@@ -56,7 +56,7 @@ class Image2TFRecords(object):
   Convert images and into tfrecords.
 
   Parameters:
-  ---------------------
+  ------------------------------------------------------------------------------
   image_path: path where you put your images
   image2class_file: csv file which contains classname for every image file
       Format:
@@ -80,6 +80,34 @@ class Image2TFRecords(object):
             into train/validation/test. set it to 0
   test_size: same as val_size
   num_shards: The number of shards per dataset split.
+
+  Attributes:
+  ------------------------------------------------------------------------------
+    Dataset Information:
+        class_header
+        class_id_header
+        filename_header:
+                        header names for class,
+                        class_id, image file name column.
+        image_path: directory path for finding images.
+        image2class_file: map file from image names to class.
+        image2class: A DataFrame of mapping image names to class names.
+                     content of this Df is from image2class_file.
+        class2id_file: map file from class name to class id.
+        class2id: A DataFrame of mapping class names to class id.
+                  content of this Df is either form class2id_file or build
+                  from existing information on this dataset.
+        dataset_name: name of dataset.
+    Train/Validation/Test split:
+        val_number
+        test_number
+        train_number
+        total_number
+        val_size
+        test_size
+
+    Others:
+        num_shards: number of tfrecords file for each split.
   """
 
   def __init__(self,
